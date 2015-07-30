@@ -3,18 +3,50 @@ from tweepy import OAuthHandler
 from tweepy import StreamListener
 import json, time, sys
 import subprocess
+import sqlite3
 
 class tweets:
-  def __init__(self, timestamp, offset, city, state, geo, msg):
-    self.timestamp = timestamp
-    self.offset = offset
-    self.city = city
-    self.state = state
-    self.geo = geo
-    self.msg = msg
+	def __init__(self, tweetID, uid, timestamp, offset, city, state, geo, msg):
+		self.tweetID = tweetID
+		self.timestamp = timestamp
+		self.offset = offset
+		self.city = city
+		self.state = state
+		self.geo = geo
+		self.msg = msg
+		self.uid = uid
+
+def outputDB(tweet):
+	
+	conn = sqlite3.connect('tweets.db')
+ 
+	c = conn.cursor()
+	
+	#c.execute('''DROP TABLE tweets''')
+	
+	
+	c.execute('''
+			  CREATE TABLE IF NOT EXISTS tweets
+			  (tweetID varchar(250) PRIMARY KEY, uid varchar(250), timestamp varchar(250), 
+			  offset varchar(250), city varchar(250), state varchar(250), 
+			   geo  varchar(250), msg varchar(250))
+			  ''')
+	
+	id =tweet.tweetID
+	timestamp = tweet.timestamp
+	offset = tweet.offset
+	city = tweet.city
+	state = tweet.state
+	geo = tweet.geo
+	msg = tweet.msg
+	uid = tweet.uid
+	
+	c.execute("INSERT INTO tweets (tweetID, uid, timestamp, offset, city, state, geo, msg) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')" %(id, uid, timestamp, offset, city, state, geo, msg))
+	conn.commit()
+	conn.close()
 
 def Enrichment(tweet):
-  enrichment_words = ["ignored", "pushed", "rumors", "locker","spread", "shoved", "rumor", "teased", "kicked", "crying","bullied", "bully", "bullyed", "bullying", "bullyer", "bulling"]
+  enrichment_words = ["ignored", "pushed", "bullie", "rumors", "locker","spread", "shoved", "rumor", "teased", "kicked", "crying","bullied", "bully", "bullyed", "bullying", "bullyer", "bulling"]
   cur_msg = tweet.msg.lower()
   passed = False
   for word in enrichment_words:
@@ -32,9 +64,9 @@ class SListener(StreamListener):
         self.api = api or API()
         self.counter = 0
         self.fprefix = fprefix
-        self.output  = open(fprefix + '.' 
-                            + time.strftime('%Y%m%d-%H%M%S') + '.json', 'w')
-        self.delout  = open('delete.txt', 'a')
+        #self.output  = open(fprefix + '.' 
+        #                    + time.strftime('%Y%m%d-%H%M%S') + '.json', 'w')
+        #self.delout  = open('delete.txt', 'a')
 
     def on_data(self, data):
 
@@ -53,35 +85,43 @@ class SListener(StreamListener):
             return True
 
     def on_status(self, status):
-        self.output.write(status + "\n")
+        #self.output.write(status + "\n")
         decoded = json.loads(status)
         timestamp = decoded["timestamp_ms"]
         offset = decoded["user"]["utc_offset"]
-        [city, state] = decoded["place"]["full_name"].split(',')
+        tweetID = decoded["id"]
         geo = decoded["geo"]
         msg = decoded["text"]
-        #print state
-        tweet = tweets(timestamp, offset, city, state, geo, msg)
+        uid = decoded["user"]["id"]
+        try:
+            [city, state] = decoded["place"]["full_name"].split(',')
+        except:
+	    	city = None
+	    	state = decoded["place"]["full_name"]
+    
+        tweet = tweets(tweetID, uid, timestamp, offset, city, state, geo, msg)
         survived_tweet = Enrichment(tweet)
         if survived_tweet:
-          #print survived_tweet.msg
           proc = subprocess.Popen(['java', '-jar', 'Classification.jar'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, )
           stdout_value = proc.communicate(survived_tweet.msg)[0]
+          
           if stdout_value > 0:
             print('{0}\001{1}\001{2}\001{3}'.format(survived_tweet.city, survived_tweet.state, survived_tweet.geo, survived_tweet.msg))
-    
+            outputDB(survived_tweet)
+	        
         #self.counter += 1
 
-        if self.counter >= 20000:
-            self.output.close()
-            self.output = open('../streaming_data/' + self.fprefix + '.' 
-                               + time.strftime('%Y%m%d-%H%M%S') + '.json', 'w')
-            self.counter = 0
+        #if self.counter >= 20000:
+        #    self.output.close()
+        #    self.output = open('../streaming_data/' + self.fprefix + '.' 
+        #                       + time.strftime('%Y%m%d-%H%M%S') + '.json', 'w')
+        #    self.counter = 0
 
         return
 
     def on_delete(self, status_id, user_id):
-        self.delout.write( str(status_id) + "\n")
+        #self.delout.write( str(status_id) + "\n")
+        pass
         return
 
     def on_limit(self, track):
@@ -118,7 +158,7 @@ def main():
 
     try: 
         #stream.filter(track = track, locations=[-122.75,36.8,-121.75,37.8])
-        stream.filter(locations=[-122.75,36.8,-121.75,37.8])
+        stream.filter(locations=[-122.75,33,-114.5,42])
         #print stream
     except Exception as e: 
         print(str(e))
