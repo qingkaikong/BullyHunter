@@ -1,8 +1,0 @@
-setup.py
-bullyfighter.egg-info/PKG-INFO
-bullyfighter.egg-info/SOURCES.txt
-bullyfighter.egg-info/dependency_links.txt
-bullyfighter.egg-info/not-zip-safe
-bullyfighter.egg-info/top_level.txt
-bullyhunter/__init__.py
-bullyhunter/_version.py
