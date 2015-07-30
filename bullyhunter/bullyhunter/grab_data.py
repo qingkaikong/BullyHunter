@@ -93,7 +93,6 @@ class SListener(StreamListener):
         geo = decoded["geo"]
         msg = decoded["text"]
         uid = decoded["user"]["id"]
-        print offset
         try:
             [city, state] = decoded["place"]["full_name"].split(',')
         except:
