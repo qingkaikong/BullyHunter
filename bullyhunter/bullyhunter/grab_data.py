@@ -2,6 +2,29 @@ import tweepy
 from tweepy import OAuthHandler
 from tweepy import StreamListener
 import json, time, sys
+import subprocess
+
+class tweets:
+  def __init__(self, timestamp, offset, city, state, geo, msg):
+    self.timestamp = timestamp
+    self.offset = offset
+    self.city = city
+    self.state = state
+    self.geo = geo
+    self.msg = msg
+
+def Enrichment(tweet):
+  enrichment_words = ["ignored", "pushed", "rumors", "locker","spread", "shoved", "rumor", "teased", "kicked", "crying","bullied", "bully", "bullyed", "bullying", "bullyer", "bulling"]
+  cur_msg = tweet.msg.lower()
+  passed = False
+  for word in enrichment_words:
+    if word in cur_msg:
+      passed = True
+      break
+  if passed and ("bull" in cur_msg) and (not "RT" in cur_msg):
+    return tweet
+  else:
+    return None
 
 class SListener(StreamListener):
 
@@ -26,28 +49,34 @@ class SListener(StreamListener):
                 return False
         elif 'warning' in data:
             warning = json.loads(data)['warnings']
-            print warning['message']
+            print(warning['message'])
             return True
 
     def on_status(self, status):
         self.output.write(status + "\n")
-        
-        #decoded is a dictionary of the tweets
         decoded = json.loads(status)
-
-        #put your classifier here 
-        
-        
-        #print decoded["text"]
-        
-	#this is saving the tweets into a jason file
+        timestamp = decoded["timestamp_ms"]
+        offset = decoded["user"]["utc_offset"]
+        [city, state] = decoded["place"]["full_name"].split(',')
+        geo = decoded["geo"]
+        msg = decoded["text"]
+        #print state
+        tweet = tweets(timestamp, offset, city, state, geo, msg)
+        survived_tweet = Enrichment(tweet)
+        if survived_tweet:
+          #print survived_tweet.msg
+          proc = subprocess.Popen(['java', '-jar', 'Classification.jar'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, )
+          stdout_value = proc.communicate(survived_tweet.msg)[0]
+          if stdout_value > 0:
+            print('{0}\001{1}\001{2}\001{3}'.format(survived_tweet.city, survived_tweet.state, survived_tweet.geo, survived_tweet.msg))
+    
         #self.counter += 1
-	#
-        #if self.counter >= 20000:
-        #    self.output.close()
-        #    self.output = open('../streaming_data/' + self.fprefix + '.' 
-        #                       + time.strftime('%Y%m%d-%H%M%S') + '.json', 'w')
-        #    self.counter = 0
+
+        if self.counter >= 20000:
+            self.output.close()
+            self.output = open('../streaming_data/' + self.fprefix + '.' 
+                               + time.strftime('%Y%m%d-%H%M%S') + '.json', 'w')
+            self.counter = 0
 
         return
 
@@ -68,8 +97,6 @@ class SListener(StreamListener):
         sys.stderr.write("Timeout, sleeping for 60 seconds...\n")
         time.sleep(60)
         return 
-
-#token and keys from twitter application
 consumer_key = 'JqQ1lAWg90PVD9U8XoDWedCm8'
 consumer_secret = 'QaUe7V9HuYQvC031MVqpUuuP2OjieI0BBDEHLpFOR221zjQ0xp'
 access_token = '3299869044-UVd8CwTfnDgcGFGPro2yGXKWhArKtXRxC6iekmH'
@@ -87,15 +114,14 @@ def main():
     listen = SListener(api, 'myprefix')
     stream = tweepy.Stream(auth, listen)
 
-    print "Streaming started..."
+    print("Streaming started...")
 
-    try:
-        #it seems twitter does not support location and other filter, see the twitter api 
+    try: 
         #stream.filter(track = track, locations=[-122.75,36.8,-121.75,37.8])
-	#this is the SF area
         stream.filter(locations=[-122.75,36.8,-121.75,37.8])
-    except Exception,e: 
-        print str(e)
+        #print stream
+    except Exception as e: 
+        print(str(e))
         stream.disconnect()
 
 if __name__ == '__main__':
