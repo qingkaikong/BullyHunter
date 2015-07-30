@@ -31,15 +31,23 @@ class SListener(StreamListener):
 
     def on_status(self, status):
         self.output.write(status + "\n")
+        
+        #decoded is a dictionary of the tweets
         decoded = json.loads(status)
-        #print decoded["text"]
-        #self.counter += 1
 
-        if self.counter >= 20000:
-            self.output.close()
-            self.output = open('../streaming_data/' + self.fprefix + '.' 
-                               + time.strftime('%Y%m%d-%H%M%S') + '.json', 'w')
-            self.counter = 0
+        #put your classifier here 
+        
+        
+        #print decoded["text"]
+        
+	#this is saving the tweets into a jason file
+        #self.counter += 1
+	#
+        #if self.counter >= 20000:
+        #    self.output.close()
+        #    self.output = open('../streaming_data/' + self.fprefix + '.' 
+        #                       + time.strftime('%Y%m%d-%H%M%S') + '.json', 'w')
+        #    self.counter = 0
 
         return
 
@@ -60,6 +68,8 @@ class SListener(StreamListener):
         sys.stderr.write("Timeout, sleeping for 60 seconds...\n")
         time.sleep(60)
         return 
+
+#token and keys from twitter application
 consumer_key = 'JqQ1lAWg90PVD9U8XoDWedCm8'
 consumer_secret = 'QaUe7V9HuYQvC031MVqpUuuP2OjieI0BBDEHLpFOR221zjQ0xp'
 access_token = '3299869044-UVd8CwTfnDgcGFGPro2yGXKWhArKtXRxC6iekmH'
@@ -79,10 +89,11 @@ def main():
 
     print "Streaming started..."
 
-    try: 
+    try:
+        #it seems twitter does not support location and other filter, see the twitter api 
         #stream.filter(track = track, locations=[-122.75,36.8,-121.75,37.8])
+	#this is the SF area
         stream.filter(locations=[-122.75,36.8,-121.75,37.8])
-        print stream
     except Exception,e: 
         print str(e)
         stream.disconnect()
