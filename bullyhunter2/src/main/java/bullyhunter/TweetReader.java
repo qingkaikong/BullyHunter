@@ -26,7 +26,8 @@ public class TweetReader {
         JavaStreamingContext sc = new JavaStreamingContext(sparkConf, Durations.seconds(2));
         JavaReceiverInputDStream<Status> stream = TwitterUtils.createStream(sc, filters);
         
-        stream.print();        
-        
+        stream.print();       
+        sc.start();
+        sc.awaitTermination();       
     }
 }
