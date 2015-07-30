@@ -1,2 +1,2 @@
-# ATTHachathon
+# BullyHunter
 ATT Hachathon
