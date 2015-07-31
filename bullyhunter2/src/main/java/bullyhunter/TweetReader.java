@@ -7,16 +7,23 @@ import org.apache.spark.streaming.api.java.JavaReceiverInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.twitter.TwitterUtils;
 import org.apache.spark.api.java.function.Function;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import twitter4j.Status;
-
-//import bullyhunter.Enrichment;
+import bullyhunter.Enrichment;
 //import bullyhunter.TweetRecord;
 
 public class TweetReader {
     private static final String DELIMITER = ",";
+    private static final String[] keywords = { "ignored", "pushed", "rumors", "locker",
+        "spread", "shoved", "rumor", "teased", "kicked", "crying",
+        "bullied", "bully", "bullyed", "bullying", "bullyer", "bulling" };
 
     public static void main(String[] args) {
+        Logger logger = Logger.getRootLogger();
+        logger.setLevel(Level.OFF);
+        
         String consumerKey = "JqQ1lAWg90PVD9U8XoDWedCm8";
         String consumerSecret = "QaUe7V9HuYQvC031MVqpUuuP2OjieI0BBDEHLpFOR221zjQ0xp";
         String accessToken = "3299869044-UVd8CwTfnDgcGFGPro2yGXKWhArKtXRxC6iekmH";
@@ -56,6 +63,23 @@ public class TweetReader {
                     }
                 });
 
+        text = text.filter(new Function<String, Boolean>() {
+            public Boolean call(String msg) {
+                boolean containKeyword = false;
+                String lowerCase = msg.toLowerCase();
+                for (String k : keywords)
+                    if (lowerCase.contains(k)) {
+                        containKeyword = true;
+                        break;
+                    }
+                if (containKeyword == true && lowerCase.contains("bull")
+                        && !lowerCase.contains("RT")) {
+                    return true;
+                }
+                return false;
+            }
+            
+        });
         text.print();
         sc.start();
         sc.awaitTermination();
