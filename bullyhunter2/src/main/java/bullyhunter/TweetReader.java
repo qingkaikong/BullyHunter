@@ -36,7 +36,7 @@ public class TweetReader {
         System.setProperty("twitter4j.oauth.accessTokenSecret",
                 accessTokenSecret);
 
-        String [] filters = {"bull"};
+        String [] filters = {"bulling", "bullied", "bulling", "bullyed", "bully", "teased"};
 
         SparkConf sparkConf = new SparkConf().setAppName("bullyhunter");
         System.out.println("Started bullyhunter...");
@@ -87,6 +87,12 @@ public class TweetReader {
 //            }
 //            
 //        });
+        text = text.filter(new Function<String, Boolean>() {
+            public Boolean call(String msg) {
+                return (msg == null) ? false : true;
+            }
+        });
+        
         text.print();
         sc.start();
         sc.awaitTermination();
