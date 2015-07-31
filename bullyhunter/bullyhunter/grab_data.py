@@ -86,18 +86,20 @@ class SListener(StreamListener):
 
     def on_status(self, status):
         #self.output.write(status + "\n")
-        
+        decoded = json.loads(status)
         try:
-        	decoded = json.loads(status)
-        	timestamp = decoded["timestamp_ms"]
-        	offset = decoded["user"]["utc_offset"]
-        	tweetID = decoded["id"]
-        	geo = decoded["geo"]
-        	msg = decoded["text"]
-        	uid = decoded["user"]["id"]
-        	[city, state] = decoded["place"]["full_name"].split(',')
+            geo = decoded["geo"]["coordinates"]
         except:
-	    	return
+            geo = None
+        try:
+            timestamp = decoded["timestamp_ms"]
+            offset = decoded["user"]["utc_offset"]
+            tweetID = decoded["id"]
+            msg = decoded["text"]
+            uid = decoded["user"]["id"]
+            [city, state] = decoded["place"]["full_name"].split(',')
+        except:
+            return
     
         tweet = tweets(tweetID, uid, timestamp, offset, city, state, geo, msg)
         survived_tweet = Enrichment(tweet)
