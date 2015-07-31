@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Simple Map</title>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+        <meta charset="utf-8">
+        <style>
+            html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            #filterdiv
+            {
+                margin-top: 10%;
+                width: 45%;
+                height: 100%;
+
+            }
+            section {
+                width: 90%;
+                height: 100%;
+                background: aqua;
+                margin: auto;
+                padding: 10px;
+            }
+            div#one {
+                width: 25%;
+                height: 100%;
+                background: white;
+                float: left;
+            }
+            div#map-canvas {
+                margin-left: 15%;
+                height: 100%;
+                background: white;
+            }
+        </style>
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+        <script>
+            var map;
+            function initialize() {
+                
+                map = new google.maps.Map(document.getElementById('map-canvas'), {
+                    zoom: 4,
+                    center: {lat: 32.73, lng: -96.97}
+                });
+            }
+            
+            google.maps.event.addDomListener(window, 'load', initialize);
+
+        </script>
+        <script>
+            function showUser(str) {
+                alert("here"+str)
+                if (str == "") {
+                    document.getElementById("txtHint").innerHTML = "";
+                    return;
+                }
+                if (window.XMLHttpRequest) {
+                    // code for IE7+, Firefox, Chrome, Opera, Safari
+                    xmlhttp = new XMLHttpRequest();
+                } else { // code for IE6, IE5
+                    xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                xmlhttp.onreadystatechange = function() {
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        document.getElementById("txtHint").innerHTML = xmlhttp.responseText;
+                    }
+                }
+                xmlhttp.open("GET", "getuser.php?q=" + str, true);
+                xmlhttp.send();
+            }
+        </script>
+    </head>
+    <body>
+    <center><h1>Bully Buster</h1></center>
+    <section>
+        <div id="one">
+            Enter Details: <input type="text" name="fname"/><br/>
+            <input type="radio" name="filtercategory" value="Pincode">Pincode
+            <br/>
+            <input type="radio" name="filtercategory" value="Location Name" >Location Name 
+            <br/>
+            <input type="radio" name="filtercategory" value="City" >City
+            <br/>
+            <!-- Column one start -->
+            <!-- Column one end -->
+            <input type="submit" value="Submit">
+
+        </div>
+        <div id="map-canvas"></div>
+    </section>
+
+</body>
+</html>
