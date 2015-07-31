@@ -4,10 +4,11 @@
 <%@ page import="java.sql.*" %> 
 <%@ page import="java.io.*" %> 
 <html>
-    <head>
-        <title>Simple Map</title>
-
-        <style>
+  <head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <style>
             html, body {
                 height: 100%;
                 margin: 0;
@@ -41,74 +42,30 @@
             }
         </style>
         <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
-        <script>
-            var map;
-            var flag = 0;
-            var geocoder;
+   
+    <script>
+var map;
+var flag=0;
+var geocoder;
+function  usedatabase(str)
+{
+    <% String connector;
+     try {
 
-            function usedatabase(str)
-            {
-
-
-            <% String connector;
-                if (request.getParameter("hiddenField") != null) {%>
-                var x = <%=request.getParameter("hiddenField")%>
-                alert("Node   a" + x);
-            <%
-    }
-    int apple = 1;
-    try {
-
-        String connectionURL = "jdbc:mysql://localhost/hackathon";
+        String connectionURL = "jdbc:sqlite:/Users/qk0840/qingkai/BullyHunter/bullyhunter/bullyhunter/tweets.db";
         Connection connection = null;
-        Class.forName("com.mysql.jdbc.Driver").newInstance();
-        connection = DriverManager.getConnection(connectionURL, "root", "");
+        Class.forName("org.sqlite.JDBC").newInstance();
+        connection = DriverManager.getConnection(connectionURL);
         if (!connection.isClosed()) {
             Statement st = connection.createStatement();
             ResultSet rs=null;
-            
-                String searchstringcity = "";
-               
-                searchstringcity ="city='"+ request.getParameter(searchstringcity)+"'";
-                String searchstringzipcode = "";
-               
-                searchstringzipcode ="state='"+ request.getParameter(searchstringzipcode)+"'";
-                String searchstringlocation = "";
-                 
-                searchstringlocation = "state='"+request.getParameter(searchstringlocation)+"'";
-                if(searchstringcity.length()==0 && searchstringzipcode.length()==0  && searchstringlocation.length()==0 )
-                {
-                   
-                    rs = st.executeQuery("select * from tweet");
-                }
-                else
-                {
-                    if(searchstringcity.length()!=0 )
-                        rs = st.executeQuery("select * from tweet where "+searchstringcity);
-                    if(searchstringlocation.length()!=0 )
-                        rs = st.executeQuery("select * from tweet where "+searchstringlocation);
-                    if(searchstringzipcode.length()!=0)
-                        rs = st.executeQuery("select * from tweet where "+searchstringzipcode);
-                }
-            %>
-                    var a = <%=searchstringcity%>;
-                    alert("Node " + a);
-                    /*      alert("Hai" + str);
-                     */
-                
-              var key=0;   
-           
-            <%
-            rs = st.executeQuery("select * from tweet");
-           
+             rs = st.executeQuery("select * from tweets");
                 while (rs.next()) {
             %>
-                var a = "<%=rs.getString(3)%>";
-                
-                
-                if (a != "")
+                var a = "<%=rs.getString(7)%>";
+                if (a != "None")
                 {
-                    var textvalue = "<%=rs.getString(4)%>";
+                    var textvalue = "<%=rs.getString(8)%>";
                     var geovalue = a.split(",");
                     var lat = geovalue[0];
                     var longvalue = geovalue[1];
@@ -118,45 +75,29 @@
                 }
                 else
                 {
-                    var city = "<%=rs.getString(1)%>";
-                    var state = "<%=rs.getString(2)%>";
+                    var city = "<%=rs.getString(5)%>";
+                    var state = "<%=rs.getString(6)%>";
                     var address = city + "," + state;
-                    var textvalue = "<%=rs.getString(4)%>";
+                    var textvalue = "<%=rs.getString(8)%>";
                     alert(address);
                     codeAddress(address, textvalue)
 
                 }
-            <%
-
-                        }
-                    }
-                    connection.close();
-                } catch (Exception ex) {
-
-                    out.println("Unable to connect to database" + ex);
+                  <%
                 }
-            %>
-            }
-
-
-            function initialize() {
-                if (flag === 0)
-                {
-                    alert("ajskfkfsadkjads");
-                    map = new google.maps.Map(document.getElementById('map-canvas'), {
-                        zoom: 4,
-                        center: {lat: 32.73, lng: -96.97}
-                    });
-
-                    /*alert(document.getElementById("hiddenField").value);
-                     */
-                    usedatabase("");
-                }
-                flag = 1;
-            }
-            function codegeo(lat,longvalue,textvalue)
+                
+        }connection.close();
+     }
+     catch(Exception ex)
+     {
+          %>    var a= "<%=ex.toString() %>";
+                  alert("ELSE"+a);<%
+     }
+    %>
+}
+   function codegeo(lat,longvalue,textvalue)
             {
-                alert(lat+longvalue+textvalue);
+                alert("I am here"+lat+longvalue+textvalue);
                  var latlngset = new google.maps.LatLng(lat, longvalue);
                     var marker = new google.maps.Marker({  
                         map: map, position: latlngset  
@@ -171,8 +112,8 @@
                     
                     
             }
-            function codeAddress(address, textvalue) {
-
+function codeAddress(address, textvalue) {
+                alert("hello");
                 geocoder = new google.maps.Geocoder();
                 geocoder.geocode({'address': address}, function(results, status) {
 
@@ -214,14 +155,30 @@
                     return false;
                 }
             }
-            window.onload = function() {
-                initialize();
+ function initialize() {
+                if (flag === 0)
+                {
+                    alert("ajskfkfsadkjads");
+                    map = new google.maps.Map(document.getElementById('map-canvas'), {
+                        zoom: 4,
+                        center: {lat: 32.73, lng: -96.97}
+                    });
+
+                    /*alert(document.getElementById("hiddenField").value);
+                     */
+                  usedatabase("");
+                }
+                flag = 1;
             }
+           
+window.onload=function(){
+    initialize();
+    
+}
 
-        </script>
-
-    </head>
-    <body >
+    </script>
+  </head>
+  <body >
 
     <center><h1>Bully Buster</h1></center>
 
@@ -238,7 +195,8 @@
                 <input type="hidden" id="hiddenField"/>
                 <!-- Column one start -->
                 <!-- Column one end -->
-                <button name="data" type="button" onclick="filtervalue();">Click</button> 
+                <button name="data" type="button" >Click</button> 
+               
         </form>
 
     </div>
