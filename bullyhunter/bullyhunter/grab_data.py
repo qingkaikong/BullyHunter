@@ -86,18 +86,18 @@ class SListener(StreamListener):
 
     def on_status(self, status):
         #self.output.write(status + "\n")
-        decoded = json.loads(status)
-        timestamp = decoded["timestamp_ms"]
-        offset = decoded["user"]["utc_offset"]
-        tweetID = decoded["id"]
-        geo = decoded["geo"]
-        msg = decoded["text"]
-        uid = decoded["user"]["id"]
+        
         try:
-            [city, state] = decoded["place"]["full_name"].split(',')
+        	decoded = json.loads(status)
+        	timestamp = decoded["timestamp_ms"]
+        	offset = decoded["user"]["utc_offset"]
+        	tweetID = decoded["id"]
+        	geo = decoded["geo"]
+        	msg = decoded["text"]
+        	uid = decoded["user"]["id"]
+        	[city, state] = decoded["place"]["full_name"].split(',')
         except:
-	    	city = None
-	    	state = decoded["place"]["full_name"]
+	    	return
     
         tweet = tweets(tweetID, uid, timestamp, offset, city, state, geo, msg)
         survived_tweet = Enrichment(tweet)
@@ -106,7 +106,7 @@ class SListener(StreamListener):
           stdout_value = proc.communicate(survived_tweet.msg)[0]
           
           if stdout_value > 0:
-            print('{0}\001{1}\001{2}\001{3}'.format(survived_tweet.city, survived_tweet.state, survived_tweet.geo, survived_tweet.msg))
+            print('{0}, {1}, {2}, {3}'.format(survived_tweet.city, survived_tweet.state, survived_tweet.geo, survived_tweet.msg))
             outputDB(survived_tweet)
 	        
         #self.counter += 1
