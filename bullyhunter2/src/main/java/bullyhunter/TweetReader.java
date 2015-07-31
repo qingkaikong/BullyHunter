@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 
 import twitter4j.Status;
 import bullyhunter.Enrichment;
+import bullyhunter.Classification;
 //import bullyhunter.TweetRecord;
 
 public class TweetReader {
@@ -35,13 +36,13 @@ public class TweetReader {
         System.setProperty("twitter4j.oauth.accessTokenSecret",
                 accessTokenSecret);
 
-        // String [] filters = {"CA"};
+        String [] filters = {"bull"};
 
         SparkConf sparkConf = new SparkConf().setAppName("bullyhunter");
         System.out.println("Started bullyhunter...");
         JavaStreamingContext sc = new JavaStreamingContext(sparkConf,
                 Durations.seconds(2));
-        JavaReceiverInputDStream<Status> stream = TwitterUtils.createStream(sc);
+        JavaReceiverInputDStream<Status> stream = TwitterUtils.createStream(sc, filters);
 
         JavaDStream<String> text = stream
                 .map(new Function<Status, String>() {
@@ -59,27 +60,33 @@ public class TweetReader {
 //                            return null;
 //                        String[] fields = fullName.spilt(DELIMITER);
 //                        tr.setCity(fullName.split());
-                        return status.getText();
+                        String msg = status.getText();
+                        double ind = Classification.classifyTweet(msg);
+                        if (ind > 0) {
+                            return status.getText();
+                        } else {
+                            return null;
+                        }
                     }
                 });
 
-        text = text.filter(new Function<String, Boolean>() {
-            public Boolean call(String msg) {
-                boolean containKeyword = false;
-                String lowerCase = msg.toLowerCase();
-                for (String k : keywords)
-                    if (lowerCase.contains(k)) {
-                        containKeyword = true;
-                        break;
-                    }
-                if (containKeyword == true && lowerCase.contains("bull")
-                        && !lowerCase.contains("RT")) {
-                    return true;
-                }
-                return false;
-            }
-            
-        });
+//        text = text.filter(new Function<String, Boolean>() {
+//            public Boolean call(String msg) {
+//                boolean containKeyword = false;
+//                String lowerCase = msg.toLowerCase();
+//                for (String k : keywords)
+//                    if (lowerCase.contains(k)) {
+//                        containKeyword = true;
+//                        break;
+//                    }
+//                if (containKeyword == true && lowerCase.contains("bull")
+//                        && !lowerCase.contains("RT")) {
+//                    return true;
+//                }
+//                return false;
+//            }
+//            
+//        });
         text.print();
         sc.start();
         sc.awaitTermination();
