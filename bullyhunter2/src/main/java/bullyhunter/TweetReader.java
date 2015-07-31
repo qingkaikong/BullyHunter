@@ -10,8 +10,8 @@ import org.apache.spark.api.java.function.Function;
 
 import twitter4j.Status;
 
-import bullyhunter.Enrichment;
-import bullyhunter.TweetRecord;
+//import bullyhunter.Enrichment;
+//import bullyhunter.TweetRecord;
 
 public class TweetReader {
     private static final String DELIMITER = ",";
